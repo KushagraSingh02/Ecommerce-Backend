@@ -7,7 +7,7 @@ export const registerController = async (req,res) =>{
 
     try {
         
-        const {name,email,password,phone,address} = req.body
+        const {name,email,password,phone,address,answer} = req.body
         //validaitons
 
         if(!name){
@@ -30,6 +30,10 @@ export const registerController = async (req,res) =>{
 
             res.send({error:'address is required'})
         }
+        if(!answer){
+
+            res.send({error:'answer is required input'})
+        }
 
         //check user
         const existinguser = await userModel.findOne({email});
@@ -47,7 +51,7 @@ export const registerController = async (req,res) =>{
         const hashedPassword = await hashPassword(password)
 
         //save
-        const user = new userModel({name,email,phone,address,password:hashedPassword}).save()
+        const user = new userModel({name,email,phone,address,password:hashedPassword,answer}).save()
 
         res.status(200).send({
             success:true,
@@ -70,6 +74,7 @@ export const registerController = async (req,res) =>{
 
 // export default {registercontroller};
 
+
 export const loginController = async (req,res) =>{
     try {
         
@@ -88,7 +93,7 @@ export const loginController = async (req,res) =>{
         const user = await userModel.findOne({email})
         // console.log(user)
         if(!user){
-            return res.send(404).send({
+            return res.status(404).send({
                 success : false,
                 message : 'Email is not registered',
             })
@@ -133,3 +138,59 @@ export const loginController = async (req,res) =>{
     }
 
 };
+
+//Forgot PassswordController
+export const forgotPasswordController = async (req,res) =>{
+    try {
+        
+        const {email,answer,newPassword} = req.body;
+
+        
+        if(!email){
+            return res.status(404).send({
+                success : false,
+                message : 'Email is definitely registered',
+            })
+        }
+        if(!answer){
+            return res.status(404).send({
+                success : false,
+                message : 'answer is mandatorily required',
+            })
+        }  if(!newPassword){
+            return res.status(404).send({
+                success : false,
+                message : 'New Password is required',
+            })
+        }
+
+        //check if email and answer are right 
+
+        const user = await userModel.findOne({email,answer})
+
+        if(!user){
+
+            return res.status(404).send({
+                success : false,
+                message:'Somethind went wrong here',
+                error
+            })
+        }
+
+        const hashed = await hashPassword(newPassword)
+        await userModel.findByIdAndUpdate(user._id,{password:hashed})
+
+        res.status(200).send({
+            success : true,
+            message:'password updated'
+        });
+
+    } catch (error) {
+        console.log(error)
+        res.send(500).send({
+            success:true,
+            message:"Something went wrong here",
+            error
+        })
+    }
+}
