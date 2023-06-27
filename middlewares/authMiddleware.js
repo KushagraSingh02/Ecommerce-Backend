@@ -1,5 +1,5 @@
-import { Jwt } from "jsonwebtoken";
-import userModel from "../models/userModel";
+import JWT from "jsonwebtoken";
+import userModel from "../models/userModel.js";
 
 //Protected route token base
 export const requireSignIn = async(req,res,next) =>{
@@ -8,10 +8,10 @@ export const requireSignIn = async(req,res,next) =>{
         //token is stored in req.header.authorization
 
         try {
-            
-            const decode = JWT.verify(req.header.authorization,process.env.JWT_SECRET)
+            console.log(req.headers.authorization)
+            const decode = JWT.verify(req.headers.authorization,process.env.JWT_SECRET)
             req.user = decode;//remember to pass the decode otherwise we would not be able to use id
-            next()
+            next();
         } catch (error) {
             console.log(error)
         }
@@ -22,7 +22,7 @@ export const requireSignIn = async(req,res,next) =>{
 export const isAdmin = async (req,res,next)=>{
 
     try {
-        const user = await userModel.findById(req.user._id)
+        const user = await userModel.findById(req.user._id);
 
         if(user.role !==1){
 
